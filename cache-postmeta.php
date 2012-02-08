@@ -2,41 +2,44 @@
 
 $yarpp_storage_class = 'YARPP_Cache_Postmeta';
 
-define('YARPP_POSTMETA_KEYWORDS_KEY','_yarpp_keywords');
+define('YARPP_POSTMETA_TITLE_KEYWORDS_KEY','_yarpp_title_keywords');
+define('YARPP_POSTMETA_BODY_KEYWORDS_KEY','_yarpp_body_keywords');
 define('YARPP_POSTMETA_RELATED_KEY', '_yarpp_related');
+define('YARPP_NO_RELATED', ':(');
 
-class YARPP_Cache_Postmeta extends YARPP_Cache {
-
-	public $name = "postmeta";
-
+class YARPP_Cache_Postmeta {
 	// variables used for lookup
-	private $related_postdata = array();
-	private $related_IDs = array();
+	var $related_postdata = array();
+	var $related_IDs = array();
+	var $name = "postmeta";
+	var $yarpp_time = false;
+	var $demo_time = false;
+	var $score_override = false;
+	var $online_limit = false;
 
 	/**
 	 * SETUP/STATUS
 	 */
-	function __construct( &$core ) {
-		parent::__construct( $core );
+	function YARPP_Cache_Postmeta() {
+		$this->name = __($this->name, 'yarpp');
+		add_filter('posts_where',array(&$this,'where_filter'));
+		add_filter('posts_orderby',array(&$this,'orderby_filter'));
+		add_filter('posts_fields',array(&$this,'fields_filter'));
+		add_filter('posts_request',array(&$this,'demo_request_filter'));
+		add_filter('post_limits',array(&$this,'limit_filter'));
 	}
 
-	public function is_enabled() {
+	function is_enabled() {
 		return true; // always enabled.
 	}
 
-	public function setup() {
+	function setup() {
 	}
 	
-	public function upgrade( $last_version ) {
-		global $wpdb;
-		if ( $last_version && version_compare('3.4b1', $last_version) > 0 ) {
-			// 3.4 moved _yarpp_body_keywords and _yarpp_title_keywords into the single
-			// postmeta _yarpp_keywords, so clear out the old data now.
-			$wpdb->query("delete from {$wpdb->postmeta} where (meta_key = '_yarpp_title_keywords' or meta_key = '_yarpp_body_keywords')");
-		}	
+	function upgrade() {
 	}
 
-	public function cache_status() {
+	function cache_status() {
 		global $wpdb;
 		return $wpdb->get_var("select (count(p.ID)-sum(m.meta_value IS NULL))/count(p.ID)
 			FROM `{$wpdb->posts}` as p
@@ -44,7 +47,7 @@ class YARPP_Cache_Postmeta extends YARPP_Cache {
 			WHERE p.post_status = 'publish'");
 	}
 
-	public function uncached($limit = 20, $offset = 0) {
+	function uncached($limit = 20, $offset = 0) {
 		global $wpdb;
 		return $wpdb->get_col("select SQL_CALC_FOUND_ROWS p.ID
 			FROM `{$wpdb->posts}` as p
@@ -56,33 +59,35 @@ class YARPP_Cache_Postmeta extends YARPP_Cache {
 	/**
 	 * MAGIC FILTERS
 	 */
-	public function where_filter($arg) {
+	function where_filter($arg) {
 		global $wpdb;
-		$threshold = yarpp_get_option('threshold');
-		// modify the where clause to use the related ID list.
-		if (!count($this->related_IDs))
-			$this->related_IDs = array(0);
-		$arg = preg_replace("!{$wpdb->posts}.ID = \d+!","{$wpdb->posts}.ID in (".join(',',$this->related_IDs).")",$arg);
+		if ($this->yarpp_time) {
+			$threshold = yarpp_get_option('threshold');
+			// modify the where clause to use the related ID list.
+			if (!count($this->related_IDs))
+				$this->related_IDs = array(0);
+			$arg = preg_replace("!{$wpdb->posts}.ID = \d+!","{$wpdb->posts}.ID in (".join(',',$this->related_IDs).")",$arg);
 
-		// if we have "recent only" set, add an additional condition
-		if (yarpp_get_option("recent_only"))
-			$arg .= " and post_date > date_sub(now(), interval ".yarpp_get_option("recent_number")." ".yarpp_get_option("recent_units").") ";
+			// if we have "recent only" set, add an additional condition
+			if (yarpp_get_option("recent_only"))
+				$arg .= " and post_date > date_sub(now(), interval ".yarpp_get_option("recent_number")." ".yarpp_get_option("recent_units").") ";
+		}
 		return $arg;
 	}
 
-	public function orderby_filter($arg) {
+	function orderby_filter($arg) {
 		global $wpdb;
 		// only order by score if the score function is added in fields_filter, which only happens
 		// if there are related posts in the postdata
-		if ($this->score_override &&
+		if ($this->yarpp_time && $this->score_override &&
 		    is_array($this->related_postdata) && count($this->related_postdata))
 			return str_replace("$wpdb->posts.post_date","score",$arg);
 		return $arg;
 	}
 
-	public function fields_filter($arg) {
-		global $wpdb;
-		if (is_array($this->related_postdata) && count($this->related_postdata)) {
+	function fields_filter($arg) {
+		global $wpdb, $wpdb;
+		if ($this->yarpp_time && is_array($this->related_postdata) && count($this->related_postdata)) {
 			$scores = array();
 			foreach ($this->related_postdata as $related_entry) {
 				$scores[] = " WHEN {$related_entry['ID']} THEN {$related_entry['score']}";
@@ -92,9 +97,21 @@ class YARPP_Cache_Postmeta extends YARPP_Cache {
 		return $arg;
 	}
 
-	public function limit_filter($arg) {
+	function demo_request_filter($arg) {
 		global $wpdb;
-		if ($this->online_limit)
+		if ($this->demo_time) {
+			$wpdb->query("set @count = 0;");
+			return "SELECT SQL_CALC_FOUND_ROWS ID + {$this->demo_limit} as ID, post_author, post_date, post_date_gmt, '" . LOREMIPSUM . "' as post_content,
+			concat('".__('Example post ','yarpp')."',@count:=@count+1) as post_title, 0 as post_category, '' as post_excerpt, 'publish' as post_status, 'open' as comment_status, 'open' as ping_status, '' as post_password, concat('example-post-',@count) as post_name, '' as to_ping, '' as pinged, post_modified, post_modified_gmt, '' as post_content_filtered, 0 as post_parent, concat('PERMALINK',@count) as guid, 0 as menu_order, 'post' as post_type, '' as post_mime_type, 0 as comment_count, 'SCORE' as score
+			FROM $wpdb->posts
+			ORDER BY ID DESC LIMIT 0, {$this->demo_limit}";
+		}
+		return $arg;
+	}
+
+	function limit_filter($arg) {
+		global $wpdb;
+		if ($this->yarpp_time and $this->online_limit)
 			return " limit {$this->online_limit} ";
 		return $arg;
 	}
@@ -102,45 +119,25 @@ class YARPP_Cache_Postmeta extends YARPP_Cache {
 	/**
 	 * RELATEDNESS CACHE CONTROL
 	 */
-	public function begin_yarpp_time($reference_ID) {
+	function begin_yarpp_time($reference_ID) {
 		$this->yarpp_time = true;
-		// get the related posts from postmeta, and also construct the relate_IDs array
+		// get the related posts from postdata, and also construct the relate_IDs array
 		$this->related_postdata = get_post_meta($reference_ID,YARPP_POSTMETA_RELATED_KEY,true);
 		if (is_array($this->related_postdata) && count($this->related_postdata))
 			$this->related_IDs = array_map(create_function('$x','return $x["ID"];'), $this->related_postdata);
-		add_filter('posts_where',array(&$this,'where_filter'));
-		add_filter('posts_orderby',array(&$this,'orderby_filter'));
-		add_filter('posts_fields',array(&$this,'fields_filter'));
-		add_filter('post_limits',array(&$this,'limit_filter'));
-		add_action('pre_get_posts',array(&$this,'add_signature'));
-		// sets the score override flag.
-		add_action('parse_query',array(&$this,'set_score_override_flag'));
 	}
 
-	public function end_yarpp_time() {
+	function end_yarpp_time() {
 		$this->yarpp_time = false;
 		$this->related_IDs = array();
 		$this->related_postdata = array();
-		remove_filter('posts_where',array(&$this,'where_filter'));
-		remove_filter('posts_orderby',array(&$this,'orderby_filter'));
-		remove_filter('posts_fields',array(&$this,'fields_filter'));
-		remove_filter('post_limits',array(&$this,'limit_filter'));
-		remove_action('pre_get_posts',array(&$this,'add_signature'));
-		// sets the score override flag.
-		remove_action('parse_query',array(&$this,'set_score_override_flag'));
 	}
 
-	// @return YARPP_NO_RELATED | YARPP_RELATED | YARPP_NOT_CACHED
-	public function is_cached($reference_ID) {
-		$related = get_post_meta($reference_ID, YARPP_POSTMETA_RELATED_KEY, true);
-		if ( YARPP_NO_RELATED === $related )
-			return YARPP_NO_RELATED;			
-		if ( '' == $related )
-			return YARPP_NOT_CACHED;
-		return YARPP_RELATED;
+	function is_cached($reference_ID) {
+		return get_post_meta($reference_ID, YARPP_POSTMETA_RELATED_KEY, true) != false;
 	}
 
-	public function clear($reference_ID) {
+	function clear($reference_ID) {
 		if (is_int($reference_ID))
 			$reference_ID = array($reference_ID);
 		// make sure that we have a non-trivial array
@@ -149,56 +146,48 @@ class YARPP_Cache_Postmeta extends YARPP_Cache {
 		// clear each cache
 		foreach($reference_ID as $id) {
 			delete_post_meta( $id, YARPP_POSTMETA_RELATED_KEY );
-			delete_post_meta( $id, YARPP_POSTMETA_KEYWORDS_KEY );
 		}
 	}
 
-	// @return YARPP_NO_RELATED | YARPP_RELATED | YARPP_NOT_CACHED
-	public function update($reference_ID) {
-		global $wpdb;
+	function update($reference_ID) {
+		global $wpdb, $yarpp_debug;
 
 		// $reference_ID must be numeric
-		if ( !$reference_ID = absint($reference_ID) )
-			return YARPP_NOT_CACHED;
+		if ( !is_int( $reference_ID ) )
+			return new WP_Error('yarpp_cache_error', "reference ID must be an int" );
 
 		$original_related = $this->related($reference_ID);
-		$related = $wpdb->get_results($this->sql($reference_ID), ARRAY_A);
+		$related = $wpdb->get_results(yarpp_sql(array(),true,$reference_ID), ARRAY_A);
 		$new_related = array_map(create_function('$x','return $x["ID"];'), $related);
 
-		if ( count($new_related) ) {
+		if (count($new_related)) {
 			update_post_meta($reference_ID, YARPP_POSTMETA_RELATED_KEY, $related);
-			if ($this->core->debug) echo "<!--YARPP just set the cache for post $reference_ID-->";
+			if ($yarpp_debug) echo "<!--YARPP just set the cache for post $reference_ID-->";
 
 			// Clear the caches of any items which are no longer related or are newly related.
 			if (count($original_related)) {
 				$this->clear(array_diff($original_related, $new_related));
 				$this->clear(array_diff($new_related, $original_related));
 			}
-
-			return YARPP_RELATED;
 		} else {
 			update_post_meta($reference_ID, YARPP_POSTMETA_RELATED_KEY, YARPP_NO_RELATED);
-
 			// Clear the caches of those which are no longer related.
-			if (count($original_related))
+			if (count($original_related)) {
 				$this->clear($original_related);
-
-			return YARPP_NO_RELATED;
+			}
 		}
 	}
 
-	public function flush() {
+	function flush() {
 		global $wpdb;
-		return $wpdb->query("delete from `{$wpdb->postmeta}` where meta_key = '" . YARPP_POSTMETA_RELATED_KEY . "' or meta_key = '" . YARPP_POSTMETA_KEYWORDS_KEY . "'");
+		return $wpdb->query("delete from `{$wpdb->postmeta}` where meta_key = '" . YARPP_POSTMETA_RELATED_KEY . "'");
 	}
 
-	public function related($reference_ID = null, $related_ID = null) {
+	function related($reference_ID = null, $related_ID = null) {
 		global $wpdb;
 
-		if ( !is_int( $reference_ID ) && !is_int( $related_ID ) ) {
-			_doing_it_wrong( __METHOD__, 'reference ID and/or related ID must be set', '3.4' );
-			return;
-		}
+		if ( !is_int( $reference_ID ) && !is_int( $related_ID ) )
+			return new WP_Error('yarpp_cache_error', "reference ID and/or related ID must be ints" );
 
 		if (!is_null($reference_ID) && !is_null($related_ID)) {
 			$results = get_post_meta($reference_ID,YARPP_POSTMETA_RELATED_KEY,true);
@@ -228,34 +217,24 @@ class YARPP_Cache_Postmeta extends YARPP_Cache {
 	/**
 	 * KEYWORDS CACHE CONTROL
 	 */
-	 
-	// @return (array) with body and title keywords
-	private function cache_keywords($ID) {
-		$keywords = array(
-			'body' => $this->body_keywords($ID),
-			'title' => $this->title_keywords($ID)
-		);
-		update_post_meta($ID, YARPP_POSTMETA_KEYWORDS_KEY, $keywords);
-		return $keywords;
+	function cache_keywords($ID) {
+		update_post_meta($ID, YARPP_POSTMETA_BODY_KEYWORDS_KEY, post_body_keywords($ID));
+		update_post_meta($ID, YARPP_POSTMETA_TITLE_KEYWORDS_KEY, post_title_keywords($ID));
 	}
 
-	// @param $ID (int)
-	// @param $type (string) body | title | all
-	// @return (string|array) depending on whether "all" were requested or not
-	public function get_keywords( $ID, $type = 'all' ) {
-		if ( !$ID = absint($ID) )
+	function get_keywords($ID, $type='body') {
+		if ( !is_int($ID) )
 			return false;
 	
-		$keywords = get_post_meta($ID, YARPP_POSTMETA_KEYWORDS_KEY, true);
+		$key = $type == 'body' ? YARPP_POSTMETA_BODY_KEYWORDS_KEY : YARPP_POSTMETA_TITLE_KEYWORDS_KEY;
+		$out = get_post_meta($ID, $key, true);
 
-		if ( empty($keywords) ) // if empty, try caching them first.
-			$keywords = $this->cache_keywords($ID);
+		// if empty, try caching them first
+		if ($out === false) {
+			$this->cache_keywords($ID);
+			$out = get_post_meta($ID, $key, true);
+		}
 
-		if ( empty($keywords) )
-			return false;
-		
-		if ( 'all' == $type )
-			return $keywords;
-		return $keywords[$type];
+		return $out;
 	}
 }
