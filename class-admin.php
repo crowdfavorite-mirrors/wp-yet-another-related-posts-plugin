@@ -70,13 +70,14 @@ class YARPP_Admin {
 	function enqueue() {
 		global $current_screen;
 		$version = defined('WP_DEBUG') && WP_DEBUG ? time() : YARPP_VERSION;
+		$plugin_dir = basename(dirname(__FILE__));
 		if (is_object($current_screen) && $current_screen->id == 'settings_page_yarpp') {
 			wp_enqueue_script( 'postbox' );
-			wp_enqueue_style( 'yarpp_options', plugins_url( 'options.css', __FILE__ ), array(), $version );
-			wp_enqueue_script( 'yarpp_options', plugins_url( 'js/options.js', __FILE__ ), array('jquery'), $version );
+			wp_enqueue_style( 'yarpp_options', plugins_url( $plugin_dir.'/options.css' ), array(), $version );
+			wp_enqueue_script( 'yarpp_options', plugins_url( $plugin_dir.'/js/options.js' ), array('jquery'), $version );
 		}
 		if (is_object($current_screen) && $current_screen->id == 'post') {
-			wp_enqueue_script( 'yarpp_metabox', plugins_url( 'js/metabox.js', __FILE__ ), array('jquery'), $version );
+			wp_enqueue_script( 'yarpp_metabox', plugins_url( $plugin_dir.'/js/metabox.js' ), array('jquery'), $version );
 		}
 	}
 	
