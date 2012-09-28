@@ -5,9 +5,9 @@ Author URI: http://mitcho.com/
 Plugin URI: http://yarpp.org/
 Donate link: http://tinyurl.com/donatetomitcho
 Tags: related, posts, post, pages, page, RSS, feed, feeds
-Requires at least: 3.0
-Tested up to: 3.4
-Stable tag: 3.5.1
+Requires at least: 3.1
+Tested up to: 3.5
+Stable tag: 3.5.2
 
 Display a list of related entries on your site and feeds based on a unique algorithm. Now with custom post type support!
 
@@ -28,7 +28,7 @@ This plugin requires PHP 5 and MySQL 4.1 or greater.
 
 = A note on support (June 2010) =
 
-I have begun instituting a stricter policy of not responding to support inquiries via email, instead directing senders to the appropriate WordPress.org forum, [here](http://wordpress.org/tags/yet-another-related-posts-plugin?forum_id=10#postform).
+I have begun instituting a stricter policy of not responding to support inquiries via email, instead directing senders to the appropriate WordPress.org forum, [here](http://wordpress.org/support/plugin/yet-another-related-posts-plugin).
 
 I try to respond to inquiries on the forums on a regular basis and hope to build a community of users who can learn from each other's questions and experiences and can support one another. I ask for your understanding on this matter.
 
@@ -187,12 +187,13 @@ YARPP is currently localized in the following languages:
 * Belarussian (`by_BY`) by [Fat Cow](http://www.fatcow.com)
 * Bulgarian (`bg_BG`) by [Flash Gallery](http://www.flashgallery.org)
 * Simplified Chinese (`zh_CN`) by Jor Wang of [jorwang.com](http://jorwang.com)
-* Cypriot Greek (`el_CY`) by Aristidis Tonikidis of [akouseto.gr](http://www.akouseto.gr)
+* Czech (`cs_CZ`) by [Zdenek Hejl](http://www.zdenek-hejl.com)
 * Dutch (`nl_NL`) by Sybrand van der Werf
 * Farsi/Persian (`fa_IR`) by [Moshen Derakhshan](http://webdesigner.downloadkar.com/)
 * French (`fr_FR`) by Lionel Chollet
 * Georgian (`ge_KA`) by Kasia Ciszewski of [Find My Hosting](www.findmyhosting.com)
 * German (`de_DE`) by Michael Kalina of [3th.be](http://3th.be) and Nils Armgart of [movie-blog.de.ms](http://www.movie-blog.de.ms)
+* Cypriot Greek (`el_CY`) by Aristidis Tonikidis of [akouseto.gr](http://www.akouseto.gr)
 * Greek (`el_EL`) by Aristidis Tonikidis of [akouseto.gr](http://www.akouseto.gr)
 * Hebrew (`he_IL`) by Mickey Zelansky of [simpleidea.us](http://simpleidea.us)
 * Hindi (`hi_IN`) by [Outshine Solutions](http://outshinesolutions.com/)
@@ -210,6 +211,7 @@ YARPP is currently localized in the following languages:
 * Brazilian Portuguese (`pt_BR`) by Rafael Fischmann of [macmagazine.br](http://macmagazine.com.br/)
 * Romanian (`ro_RO`) by [Uhren Shop](http://uhrenstore.de/)
 * Russian (`ru_RU`) by Marat Latypov of [blogocms.ru](http://blogocms.ru)
+* Serbian (`sr_RS`) by [Zarko Zivkovic](http://www.zarkozivkovic.com/) 
 * Slovak (`sk_SK`) by [Forex](http://www.eforex.sk/)
 * Spanish (`es_ES`) by Rene of [WordPress Webshop](http://wpwebshop.com)
 * Swedish (`sv_SE`) by Max Elander
@@ -221,7 +223,6 @@ YARPP is currently localized in the following languages:
 <!--We already have localizers lined up for the following languages:
 * Danish
 * Catalan
-* Hungarian
 * Thai
 * Bhasa Indonesian
 -->
@@ -229,6 +230,24 @@ YARPP is currently localized in the following languages:
 If you are a bilingual speaker of English and another language and an avid user of YARPP, I would love to talk to you about localizing YARPP! Localizing YARPP can be pretty easy using [the Codestyling Localization plugin](http://www.code-styling.de/english/development/wordpress-plugin-codestyling-localization-en). Please [contact me](mailto:yarpp@mitcho.com) *first* before translating to make sure noone else is working on your language. Thanks!
 
 == Changelog ==
+
+= 3.5.2 =
+* [Bugfix](http://wordpress.org/support/topic/plugin-yet-another-related-posts-plugin-bug-found-with-solution): fix an unfortunate typo which caused "no related posts" on many environments with non-MyISAM tables
+* Fixed a bug where related posts would not be recomputed on post update, on environments using the `table` YARPP cache method and a persistent object caching system, like W3 Total Cache or memcached
+* [Bugfix](http://wordpress.org/support/topic/plugin-yet-another-related-posts-plugin-351-error-call-to-a-member-function): reference to `get_post_types()` failed in ajax display
+* Fixed a bug where some RSS display options were not being obeyed
+* Fixed a bug where the "automatic display" was being displayed on some custom post types without any control.
+* Localizations:
+	* Added Czech (`cs_CZ`) localization by [Zdenek Hejl](http://www.zdenek-hejl.com)
+	* Added Serbian (`sr_RS`) by [Zarko Zivkovic](http://www.zarkozivkovic.com/)
+	* Fixed bug in Dutch localization
+* Clarified readme to require WordPress 3.1
+* Code cleanup:
+	* PHP 5.3+: replaced an instance of `ereg_replace`
+	* Removed warning on settings save
+	* Sometimes [a warning]((http://wordpress.org/support/topic/plugin-yet-another-related-posts-plugin-warning-invalid-argument-supplied-for-foreach)) was printed on upgrade from YARPP < 3.4.4
+	* Fixed [PHP warning](http://wordpress.org/support/topic/plugin-yet-another-related-posts-plugin-php-warning) when no taxonomies are considered
+	* No longer using `clear_pre` function which has been deprecated since WordPress 3.4.
 
 = 3.5.1 =
 * [Bugfix](http://wordpress.org/support/topic/plugin-yet-another-related-posts-plugin-catchable-fatal-error-object-of-class-stdclass-could-not-be-converted-to-string): change `$yarpp->get_post_types()` to return array of names by default
