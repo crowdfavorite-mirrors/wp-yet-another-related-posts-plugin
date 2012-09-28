@@ -32,11 +32,10 @@ class YARPP {
 
 		register_activation_hook( __FILE__, array($this, 'activate') );
 		
-		// update cache on save
-		add_action( 'save_post', array($this->cache, 'save_post') );
 		// new in 3.2: update cache on delete
-		add_action( 'delete_post', array($this->cache, 'delete_post') );
+		add_action( 'delete_post', array($this->cache, 'delete_post'), 10, 1 );
 		// new in 3.2.1: handle post_status transitions
+		// new in 3.5.3: use transition_post_status instead of save_post hook
 		add_action( 'transition_post_status', array($this->cache, 'transition_post_status'), 10, 3);
 
 		// automatic display hooks:
@@ -185,6 +184,15 @@ class YARPP {
 		return false;
 	}
 	
+	// @since 3.5.2: function to enforce YARPP setup
+	// if new install, activate; else upgrade
+	function enforce() {
+		if ( !get_option('yarpp_version') )
+			$this->activate();
+		else
+			$this->upgrade();
+	}
+	
 	function activate() {
 		global $wpdb;
 	
@@ -205,10 +213,12 @@ class YARPP {
 		}
 		
 		if ( !get_option('yarpp_version') ) {
+			// new install
 			add_option( 'yarpp_version', YARPP_VERSION );
 			$this->version_info(true);
 		} else {
-			$this->upgrade_check();
+			// upgrade
+			$this->upgrade();
 		}
 	
 		return 1;
@@ -224,7 +234,7 @@ class YARPP {
 		return 'UNKNOWN';
 	}
 	
-	function upgrade_check() {
+	function upgrade() {
 		$last_version = get_option( 'yarpp_version' );
 		if (version_compare(YARPP_VERSION, $last_version) === 0)
 			return;
@@ -510,14 +520,18 @@ class YARPP {
 	function display_related($reference_ID = null, $args = array(), $echo = true) {
 		global $wp_query, $pagenow;
 	
-		$this->upgrade_check();
-
-		$reference_ID = ( null === $reference_ID || false === $reference_ID ) ?
-			get_the_ID() : absint($reference_ID);
+		$this->enforce();
 
 		// if we're already in a YARPP loop, stop now.
 		if ( $this->cache->is_yarpp_time() || $this->cache_bypass->is_yarpp_time() )
 			return false;
+
+		$reference_ID = ( null === $reference_ID || false === $reference_ID ) ?
+			get_the_ID() : absint($reference_ID);
+
+		// @since 3.5.3: don't compute on revisions
+		if ( $the_post = wp_is_post_revision($reference_ID) )
+			$reference_ID = $the_post;
 		
 		$this->setup_active_cache( $args );
 
@@ -595,9 +609,12 @@ class YARPP {
 	 * @param (array) $args
 	 */
 	function get_related($reference_ID = null, $args = array()) {
-		$this->upgrade_check();
+		$this->enforce();
 
 		$reference_ID = ( null === $reference_ID ) ? get_the_ID() : absint($reference_ID);
+		// @since 3.5.3: don't compute on revisions
+		if ( $the_post = wp_is_post_revision($reference_ID) )
+			$reference_ID = $the_post;
 	
 		// if we're already in a YARPP loop, stop now.
 		if ( $this->cache->is_yarpp_time() || $this->cache_bypass->is_yarpp_time() )
@@ -634,14 +651,17 @@ class YARPP {
 	 * @param (array) $args
 	 */
 	function related_exist($reference_ID = null, $args = array()) {
-		$this->upgrade_check();
+		$this->enforce();
 	
-		$reference_ID = ( null === $reference_ID ) ? get_the_ID() : absint($reference_ID);
-			
 		// if we're already in a YARPP loop, stop now.
 		if ( $this->cache->is_yarpp_time() || $this->cache_bypass->is_yarpp_time() )
 			return false;
 	
+		$reference_ID = ( null === $reference_ID ) ? get_the_ID() : absint($reference_ID);
+		// @since 3.5.3: don't compute on revisions
+		if ( $the_post = wp_is_post_revision($reference_ID) )
+			$reference_ID = $the_post;
+				
 		$this->setup_active_cache( $args );
 	
 		$cache_status = $this->active_cache->enforce($reference_ID);
@@ -819,8 +839,8 @@ class YARPP {
 			if (is_wp_error($remote))
 				return false;
 			
-			$result = unserialize($remote['body']);
-			set_transient('yarpp_version_info', $result, 60*60*12);
+			if ( $result = @unserialize($remote['body']) )
+				set_transient('yarpp_version_info', $result, 60*60*12);
 		}
 		return $result;
 	}
