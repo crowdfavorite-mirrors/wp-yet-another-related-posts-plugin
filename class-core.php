@@ -81,7 +81,7 @@ class YARPP {
 			'rss_after_related' => '</ol>',
 			'rss_no_results' => '<p>'.__('No related posts.','yarpp').'</p>',
 			'rss_order' => 'score DESC',
-			'past_only' => true,
+			'past_only' => false,
 			'show_excerpt' => false,
 			'rss_show_excerpt' => false,
 			'template' => false, // new in 3.5
@@ -299,7 +299,7 @@ class YARPP {
 			'tags' => '2',
 			'distags' => '',
 			'discats' => '',
-			'past_only' => true,
+			'past_only' => false,
 			'show_excerpt' => false,
 			'recent_only' => false, // new in 3.0
 			'use_template' => false, // new in 2.2
@@ -462,6 +462,18 @@ class YARPP {
 			}
 			yarpp_set_option(array('weight' => $weight));
 		}
+	}
+	
+	function is_happy() {
+		$stats = $this->cache->stats();
+
+		if ( !(array_sum( $stats ) > 0) )
+			return false;
+		
+		$sum = array_sum(array_map('array_product', array_map(null, array_values($stats), array_keys($stats))));
+		$avg = $sum / array_sum( $stats );
+
+		return $this->cache->cache_status() > 0.1 && $avg > 2;
 	}
 	
 	private $post_types = null;
