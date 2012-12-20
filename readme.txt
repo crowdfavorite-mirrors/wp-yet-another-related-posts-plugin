@@ -7,7 +7,7 @@ Donate link: http://tinyurl.com/donatetomitcho
 Tags: related, posts, post, pages, page, RSS, feed, feeds
 Requires at least: 3.3
 Tested up to: 3.5
-Stable tag: 4.0.1
+Stable tag: 4.0.2
 License: GPLv2 or later
 
 Display a list of related entries on your site and feeds based on a unique algorithm. Now with thumbnail support built-in!
@@ -221,7 +221,7 @@ YARPP is currently localized in the following languages:
 * German (`de_DE`) by Michael Kalina of [3th.be](http://3th.be) and Nils Armgart of [movie-blog.de.ms](http://www.movie-blog.de.ms)
 * Cypriot Greek (`el_CY`) by Aristidis Tonikidis of [akouseto.gr](http://www.akouseto.gr)
 * Greek (`el_EL`) by Aristidis Tonikidis of [akouseto.gr](http://www.akouseto.gr)
-* Hebrew (`he_IL`) by Mickey Zelansky of [simpleidea.us](http://simpleidea.us)
+* Hebrew (`he_IL`) by Mickey Zelansky of [simpleidea.us](http://simpleidea.us) and [Hadas Kotek](http://web.mit.edu/hkotek/www)
 * Hindi (`hi_IN`) by [Outshine Solutions](http://outshinesolutions.com/)
 * Italian (`it_IT`) by Gianni Diurno of [gidibao.net](http://gidibao.net)
 * Irish (`gb_IR`) by [Ray Gren](http://letsbefamous.com)
@@ -256,6 +256,13 @@ YARPP is currently localized in the following languages:
 If you are a bilingual speaker of English and another language and an avid user of YARPP, I would love to talk to you about localizing YARPP! Localizing YARPP can be pretty easy using [the Codestyling Localization plugin](http://www.code-styling.de/english/development/wordpress-plugin-codestyling-localization-en). Please [contact me](mailto:yarpp@mitcho.com) *first* before translating to make sure noone else is working on your language. Thanks!
 
 == Changelog ==
+
+= 4.0.2 =
+* [Bugfix](http://wordpress.org/support/topic/yarpp-doesnt-update-suggestions-with-older-posts): cache should be cleared when the "show only previous posts?" option is changed
+* [Bugfix](http://wordpress.org/support/topic/no-default-image-showing?replies=4): In the thumbnail display, sometimes the default image was not displayed, even though no post thumbnail was available.
+* Localization updates
+	* Updated Polish, Japanese, Hebrew localizations
+	* Better right-to-left layout support
 
 = 4.0.1 =
 * Improvements to thumbnail handling

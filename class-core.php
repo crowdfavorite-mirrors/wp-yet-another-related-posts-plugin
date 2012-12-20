@@ -121,7 +121,7 @@ class YARPP {
 			'display_code' => false, // new in 4
 			'auto_display_archive' => false, // new in 4
 			'auto_display_post_types' => array( 'post' ), // new in 4, replacing auto_display
-			'pools' => array( 'message' => mt_rand(0,5) ), // new in 4
+			'pools' => array(), // new in 4
 		);
 	}
 	
@@ -140,7 +140,7 @@ class YARPP {
 		update_option( 'yarpp', $new_options );
 	
 		// new in 3.1: clear cache when updating certain settings.
-		$clear_cache_options = array( 'show_pass_post' => 1, 'recent' => 1, 'threshold' => 1 );
+		$clear_cache_options = array( 'show_pass_post' => 1, 'recent' => 1, 'threshold' => 1, 'past_only' => 1 );
 
 		$relevant_options = array_intersect_key( $options, $clear_cache_options );
 		$relevant_current_options = array_intersect_key( $current_options, $clear_cache_options );
@@ -1055,7 +1055,7 @@ class YARPP {
 		// this filter doesn't handle feeds
 		if ( is_feed() )
 			return $content;
-		
+
 		$auto_display_post_types = $this->get_option( 'auto_display_post_types' );
 
 		// if it's not an auto-display post type, return
