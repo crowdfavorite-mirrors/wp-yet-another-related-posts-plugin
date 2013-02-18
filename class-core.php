@@ -61,6 +61,7 @@ class YARPP {
 		if ( is_admin() ) {
 			require_once(YARPP_DIR . '/class-admin.php');
 			$this->admin = new YARPP_Admin( $this );
+			$this->enforce();
 		}
 	}
 		
@@ -431,7 +432,8 @@ class YARPP {
 	
 		$this->version_info(true);
 	
-		update_option('yarpp_version',YARPP_VERSION);
+		update_option( 'yarpp_version', YARPP_VERSION );
+		update_option( 'yarpp_upgraded', true );
 		$this->delete_transient( 'yarpp_optin' );
 	}
 	
@@ -664,13 +666,13 @@ class YARPP {
 	}
 	function restore_post_context() {
 		global $wp_query, $pagenow, $post;
+		$wp_query = $this->current_query; unset($this->current_query);
+		$pagenow = $this->current_pagenow; unset($this->current_pagenow);
 		if ( isset($this->current_post) ) {
 			$post = $this->current_post;
 			setup_postdata( $post );
 			unset($this->current_post);
 		}
-		$pagenow = $this->current_pagenow; unset($this->current_pagenow);
-		$wp_query = $this->current_query; unset($this->current_query);
 	}
 	
 	private $post_types = null;
@@ -770,7 +772,7 @@ class YARPP {
 			'url' => get_bloginfo('url'),
 			'plugins' => array(
 				'active' => implode( '|', get_option( 'active_plugins', array() ) ),
-				'sitewide' => implode( '|', get_site_option( 'active_sitewide_plugins', array() ) )
+				'sitewide' => implode( '|', array_keys( get_site_option( 'active_sitewide_plugins', array() ) ) )
 			),
 			'pools' => $settings['pools']
 		);
@@ -891,6 +893,12 @@ class YARPP {
 			));
 		}
 		$this->prep_query( $this->current_query->is_feed );
+		
+		$wp_query->posts = apply_filters('yarpp_results', $wp_query->posts, array(
+			'function' => 'display_related',
+			'args' => $args,
+			'related_ID' => $reference_ID));
+		
 		$related_query = $wp_query; // backwards compatibility
 		$related_count = $related_query->post_count;
 
@@ -983,6 +991,12 @@ class YARPP {
 			'showposts' => $limit,
 			'post_type' => ( isset($args['post_type']) ? $args['post_type'] : $this->get_post_types() )
 		));
+	
+		$related_query->posts = apply_filters('yarpp_results', $related_query->posts, array(
+			'function' => 'get_related',
+			'args' => $args,
+			'related_ID' => $reference_ID));
+	
 		$this->active_cache->end_yarpp_time(); // YARPP time is over... :(
 	
 		return $related_query->posts;
@@ -1022,6 +1036,12 @@ class YARPP {
 			'showposts' => 1,
 			'post_type' => ( isset($args['post_type']) ? $args['post_type'] : $this->get_post_types() )
 		));
+		
+		$related_query->posts = apply_filters('yarpp_results', $related_query->posts, array(
+			'function' => 'related_exist',
+			'args' => $args,
+			'related_ID' => $reference_ID));
+		
 		$return = $related_query->have_posts();
 		unset($related_query);
 		$this->active_cache->end_yarpp_time(); // YARPP time is over. :(
@@ -1212,16 +1232,23 @@ class YARPP {
 	
 	// @since 3.3: use PHP serialized format instead of JSON
 	function version_info( $enforce_cache = false ) {
-		if (false === ($result = $this->get_transient('yarpp_version_info')) || $enforce_cache) {
-			$version = YARPP_VERSION;
-			$remote = wp_remote_post("http://yarpp.org/checkversion.php?format=php&version={$version}");
-			
-			if (is_wp_error($remote))
-				return false;
-			
-			if ( $result = @unserialize($remote['body']) )
-				$this->set_transient('yarpp_version_info', $result, 60 * 60 * 24);
+		if ( !$enforce_cache && false !== ($result = $this->get_transient('yarpp_version_info')) )
+			return $result;
+
+		$version = YARPP_VERSION;
+		$remote = wp_remote_post("http://yarpp.org/checkversion.php?format=php&version={$version}");
+		
+		if ( is_wp_error($remote) ||
+			 wp_remote_retrieve_response_code( $remote ) != 200 ||
+			 !isset($remote['body']) ) {
+			// try again later
+			$this->set_transient('yarpp_version_info', null, 60 * 60);
+			return false;
 		}
+		
+		if ( $result = @unserialize($remote['body']) )
+			$this->set_transient('yarpp_version_info', $result, 60 * 60 * 24);
+
 		return $result;
 	}
 
@@ -1231,7 +1258,10 @@ class YARPP {
 			return true;
 
 		$remote = wp_remote_post( 'http://yarpp.org/optin/2/', array( 'body' => $this->optin_data() ) );
-		if ( is_wp_error($remote) || !isset($remote['body']) || $remote['body'] != 'ok' ) {
+		if ( is_wp_error($remote) ||
+			 wp_remote_retrieve_response_code( $remote ) != 200 ||
+			 !isset($remote['body']) ||
+			 $remote['body'] != 'ok' ) {
 			// try again later
 			$this->set_transient( 'yarpp_optin', null, 60 * 60 );
 			return false;
@@ -1262,11 +1292,24 @@ class YARPP {
 			if ( !is_null( $data ) )
 				update_option( $transient, $data );
 		}
+		$this->kick_other_caches();
 	}
 	
 	private function delete_transient( $transient ) {
 		delete_option( $transient );
 		delete_option( $transient . '_timeout' );
+	}
+	
+	// 4.0.4: helper function to force other caching systems which are too aggressive
+	// <cough>DB Cache Reloaded (Fix)</cough> to flush when YARPP transients are set.
+	private function kick_other_caches() {
+		if ( class_exists( 'DBCacheReloaded' ) ) {
+			global $wp_db_cache_reloaded;
+			if ( is_object( $wp_db_cache_reloaded ) && is_a( $wp_db_cache_reloaded, 'DBCacheReloaded' ) ) {
+				// if DBCR offered a more granualar way of just flushing options, I'd love that.
+				$wp_db_cache_reloaded->dbcr_clear();
+			}
+		}
 	}
 	
 	// 3.5.2: clean_pre is deprecated in WP 3.4, so implement here.

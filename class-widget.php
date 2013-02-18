@@ -18,13 +18,10 @@ class YARPP_Widget extends WP_Widget {
 		if ( isset($instance['use_template']) )
 			$instance['template'] = $instance['use_template'] ? $instance['template_file'] : false;
 
-// 		$choice = false === $instance['template'] ? 'builtin' :
-// 			( $instance['template'] == 'thumbnails' ? 'thumbnails' : 'custom' );
-
 		if ( $yarpp->get_option('cross_relate') )
 			$instance['post_type'] = $yarpp->get_post_types();
-		else if ( 'page' == get_post_type() )
-			$instance['post_type'] = array( 'page' );
+		else if ( in_array(get_post_type(), $yarpp->get_post_types()) )
+			$instance['post_type'] = array( get_post_type() );
 		else
 			$instance['post_type'] = array( 'post' );
 
@@ -61,6 +58,11 @@ class YARPP_Widget extends WP_Widget {
 			$instance['title'] = $old_instance['title'];
 		else // save the title change:
 			$instance['title'] = $new_instance['title'];
+
+		if ( !!$instance['thumbnails_heading'] ) // don't save the title change.
+			$instance['thumbnails_heading'] = $old_instance['thumbnails_heading'];
+		else // save the title change:
+			$instance['thumbnails_heading'] = $new_instance['thumbnails_heading'];
 		
 		return $instance;
 	}
@@ -70,6 +72,7 @@ class YARPP_Widget extends WP_Widget {
 	
 		$instance = wp_parse_args( $instance, array(
 			'title' => __('Related Posts (YARPP)','yarpp'),
+			'thumbnails_heading' => $yarpp->get_option('thumbnails_heading'),
 			'template' => false,
 			'promote_yarpp' => false
 		) );
@@ -88,7 +91,7 @@ class YARPP_Widget extends WP_Widget {
 		
 		?>
 
-		<p>
+		<p class='yarpp-widget-type-control'>
 			<label style="padding-right: 10px; display: inline-block;" for="<?php echo $this->get_field_id('use_template_builtin'); ?>"><input id="<?php echo $this->get_field_id('use_template_builtin'); ?>" name="<?php echo $this->get_field_name('use_template'); ?>" type="radio" value="builtin" <?php checked( $choice == 'builtin' ) ?> /> <?php _e( "List", 'yarpp' ); ?></label>
 		
 			<label style="padding-right: 10px; display: inline-block;" for="<?php echo $this->get_field_id('use_template_thumbnails'); ?>"><input id="<?php echo $this->get_field_id('use_template_thumbnails'); ?>" name="<?php echo $this->get_field_name('use_template'); ?>" type="radio" value="thumbnails" <?php checked( $choice == 'thumbnails' ) ?> /> <?php _e( "Thumbnails", 'yarpp' ); ?></label>
@@ -98,6 +101,8 @@ class YARPP_Widget extends WP_Widget {
 
 		<p><label for="<?php echo $this->get_field_id('title'); ?>"><?php _e('Title:'); ?> <input class="widefat" id="<?php echo $this->get_field_id('title'); ?>" name="<?php echo $this->get_field_name('title'); ?>" type="text" value="<?php echo esc_attr($instance['title']); ?>" /></label></p>
 
+		<p><label for="<?php echo $this->get_field_id('thumbnails_heading'); ?>"><?php _e( 'Heading:', 'yarpp' ); ?> <input class="widefat" id="<?php echo $this->get_field_id('thumbnails_heading'); ?>" name="<?php echo $this->get_field_name('thumbnails_heading'); ?>" type="text" value="<?php echo esc_attr($instance['thumbnails_heading']); ?>" /></label></p>
+
 		<p><label for="<?php echo $this->get_field_id('template_file'); ?>"><?php _e("Template file:",'yarpp');?></label> <select name="<?php echo $this->get_field_name('template_file'); ?>" id="<?php echo $this->get_field_id('template_file'); ?>">
 			<?php foreach ($templates as $template): ?>
 			<option value='<?php echo esc_attr($template['basename']); ?>'<?php selected($template['basename'], $instance['template']);?>><?php echo esc_html($template['name']); ?></option>
@@ -105,14 +110,25 @@ class YARPP_Widget extends WP_Widget {
 		</select><p>
 		<script type="text/javascript">
 		jQuery(function($) {
-			function ensureTemplateChoice() {
-				var custom = $('#<?php echo $this->get_field_id('use_template_custom'); ?>').prop('checked');
-				var builtin = $('#<?php echo $this->get_field_id('use_template_builtin'); ?>').prop('checked');
-				$('#<?php echo $this->get_field_id('title'); ?>').closest('p').toggle(!!builtin);
-				$('#<?php echo $this->get_field_id('template_file'); ?>').closest('p').toggle(!!custom);
+			function ensureTemplateChoice(e) {
+				if (typeof e == 'object' && 'type' in e)
+					e.stopImmediatePropagation();
+				var this_form = $(this).closest('form');
+				var widget_id = this_form.find('.widget-id').val();
+				// if this widget is just in staging:
+				if ( /__i__$/.test(widget_id) )
+					return;
+				
+				var builtin = !!$('#widget-' + widget_id + '-use_template_builtin').prop('checked');
+				var thumbnails = !!$('#widget-' + widget_id + '-use_template_thumbnails').prop('checked');
+				var custom = !!$('#widget-' + widget_id + '-use_template_custom').prop('checked');
+				$('#widget-' + widget_id + '-title').closest('p').toggle(builtin);
+				$('#widget-' + widget_id + '-thumbnails_heading').closest('p').toggle(thumbnails);
+				$('#widget-' + widget_id + '-template_file').closest('p').toggle(custom);
+				console.log(widget_id, custom, builtin);
 			}
-			$('input[name="<?php echo $this->get_field_name('use_template'); ?>"]').change(ensureTemplateChoice);
-			ensureTemplateChoice();
+			$('#wpbody').on('change', '.yarpp-widget-type-control input', ensureTemplateChoice);
+			$('.yarpp-widget-type-control').each(ensureTemplateChoice);
 		});
 		</script>
 
