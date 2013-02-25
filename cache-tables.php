@@ -92,6 +92,19 @@ class YARPP_Cache_Tables extends YARPP_Cache {
 		global $wpdb;
 		return wp_list_pluck($wpdb->get_results("select num, count(*) as ct from (select 0 + if(id = 0, 0, count(ID)) as num from {$wpdb->prefix}yarpp_related_cache group by reference_ID) as t group by num order by num asc", OBJECT_K), 'ct');
 	}
+	
+	public function graph_data( $threshold = 5 ) {
+		global $wpdb;
+		
+		$threshold = absint($threshold);
+		$results = $wpdb->get_results("select pair, sum(score) as score from 
+			((select concat(reference_ID, '-', ID) as pair, score from {$wpdb->prefix}yarpp_related_cache where reference_ID < ID)
+			union
+			(select concat(ID, '-', reference_ID) as pair, score from {$wpdb->prefix}yarpp_related_cache where ID < reference_ID)) as t
+			group by pair
+			having sum(score) > {$threshold}");
+		return $results;
+	}
 
 	/**
 	 * MAGIC FILTERS
@@ -105,12 +118,12 @@ class YARPP_Cache_Tables extends YARPP_Cache {
 
 	public function where_filter($arg) {
 		global $wpdb;
-		$threshold = yarpp_get_option('threshold');
+		$threshold = $this->core->get_option('threshold');
 		if ($this->yarpp_time) {
 
 			$arg = str_replace("$wpdb->posts.ID = ","yarpp.score >= $threshold and yarpp.reference_ID = ",$arg);
 
-			$recent = yarpp_get_option('recent');
+			$recent = $this->core->get_option('recent');
 			if ( !!$recent )
 				$arg .= " and post_date > date_sub(now(), interval {$recent}) ";
 		}
