@@ -7,7 +7,7 @@ Donate link: http://tinyurl.com/donatetomitcho
 Tags: related, posts, post, pages, page, RSS, feed, feeds
 Requires at least: 3.3
 Tested up to: 3.6
-Stable tag: 4.0.5
+Stable tag: 4.0.6
 License: GPLv2 or later
 
 Display a list of related entries on your site and feeds based on a unique algorithm. Now with thumbnail support built-in!
@@ -215,18 +215,20 @@ YARPP is currently localized in the following languages:
 * Croatian (`hr`) by [GoCroatia.com](http://gocroatia.com)
 * Czech (`cs_CZ`) by [Zdenek Hejl](http://www.zdenek-hejl.com)
 * Dutch (`nl_NL`) by Sybrand van der Werf
+* Estonian (`est_EST`) by [JOURNAL](http://journal24.info/)
 * Farsi/Persian (`fa_IR`) by [Moshen Derakhshan](http://webdesigner.downloadkar.com/)
 * French (`fr_FR`) by Lionel Chollet
 * Georgian (`ge_KA`) by Kasia Ciszewski of [Find My Hosting](www.findmyhosting.com)
 * German (`de_DE`) by Michael Kalina of [3th.be](http://3th.be) and Nils Armgart of [movie-blog.de.ms](http://www.movie-blog.de.ms)
 * Cypriot Greek (`el_CY`) by Aristidis Tonikidis of [akouseto.gr](http://www.akouseto.gr)
 * Greek (`el_EL`) by Aristidis Tonikidis of [akouseto.gr](http://www.akouseto.gr)
+* Gujrati (`gu_IN`) by [Vikas Arora](http://www.wiznicworld.com/)
 * Hebrew (`he_IL`) by Mickey Zelansky of [simpleidea.us](http://simpleidea.us) and [Hadas Kotek](http://web.mit.edu/hkotek/www)
 * Hindi (`hi_IN`) by [Outshine Solutions](http://outshinesolutions.com/)
 * Italian (`it_IT`) by Gianni Diurno of [gidibao.net](http://gidibao.net)
 * Irish (`gb_IR`) by [Ray Gren](http://letsbefamous.com)
 * Bahasa Indonesia (`id_ID`) by [Hendry Lee](http://hendrylee.com/) of [Kelayang](http://kelayang.com/)
-* Japanese (`ja`) by myself (yarpp at mitcho dot com)
+* Japanese (`ja`) by [myself](http://mitcho.com)
 * Kazakh (`kk_KZ`) by [DachaDecor](http://DachaDecor.ru)
 * Korean (`ko_KR`) by [Jong-In Kim](http://incommunity.codex.kr)
 * Latvian (`lv_LV`) by [Mike](http://antsar.info)
@@ -247,16 +249,21 @@ YARPP is currently localized in the following languages:
 * Ukrainian (`uk_UA`) by [Onore](http://Onore.kiev.ua) (Alexander Musevich)
 * Uzbek (`uz_UZ`) by Ali Safarov of [comfi.com](http://www.comfi.com/)
 
-<!--We already have localizers lined up for the following languages:
-* Danish
-* Catalan
-* Thai
-* Bhasa Indonesian
--->
-
 If you are a bilingual speaker of English and another language and an avid user of YARPP, I would love to talk to you about localizing YARPP! Localizing YARPP can be pretty easy using [the Codestyling Localization plugin](http://www.code-styling.de/english/development/wordpress-plugin-codestyling-localization-en). Please [contact me](mailto:yarpp@mitcho.com) *first* before translating to make sure noone else is working on your language. Thanks!
 
 == Changelog ==
+
+= 4.0.6 =
+* YARPP's automatic display will not run on posts which include the HTML comment `<!--noyarpp-->` [by request](https://wordpress.org/support/topic/disabling-yarrp-on-specific-pages).
+* More robust activation handling, particularly when network-activated.
+* Improved handling of exceptions, for example when fulltext indexes cannot be created or non-MyISAM tables are used.
+* YARPP no longer triggers the generation of YARPP-thumbnail-sized images (120x120) when YARPP thumbnails are not used.
+	* If you are using YARPP programmatically and using the thumbnails view and having troubles with YARPP's thumbnail size being registered, a manual control to force image size registration has been added to the [YARPP Experiments](http://wordpress.org/extend/plugins/yarpp-experiments/) plugin.
+* [Bugfix](https://wordpress.org/support/topic/yarpp_related_exist-and-begin_yarpp_time-error): calls to `yarpp_related_exist()` type functions were causing errors.
+* Bundled `yarpp-template-wpml.php` is now called `yarpp-template-multilingual.php`, following [discussion with the author of the Polylang plugin](https://wordpress.org/support/topic/better-integration-of-yarpp-and-polylang).
+* Localizations
+	* Added Estonian (`est_EST`) by [JOURNAL](http://journal24.info/)
+	* Added Gujrati (`gu_IN`) by [Vikas Arora](http://www.wiznicworld.com/)
 
 = 4.0.5 =
 * [Bugfix](https://wordpress.org/support/topic/bug-in-upgrading-from-yarp-3_5_2b2): Some upgrade code would try to access the global $yarpp before it was properly initialized

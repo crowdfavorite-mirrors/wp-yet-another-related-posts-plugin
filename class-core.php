@@ -12,8 +12,6 @@ class YARPP {
 	public $admin;
 	private $storage_class;
 	
-	public $myisam = true;
-	
 	// here's a list of all the options YARPP uses (except version), as well as their default values, sans the yarpp_ prefix, split up into binary options and value options. These arrays are used in updating settings (options.php) and other tasks.
 	public $default_options = array();
 	public $default_hidden_metaboxes = array( 'yarpp_pool', 'yarpp_relatedness' );
@@ -45,9 +43,12 @@ class YARPP {
 		add_filter( 'the_excerpt_rss', array( $this, 'the_excerpt_rss' ), 600 );
 		add_action( 'wp_enqueue_scripts', array( $this, 'maybe_enqueue_thumbnails' ) );
 
-		// register yarpp-thumbnail size, if theme has not already
+		// if we're using thumbnails, register yarpp-thumbnail size, if theme has not already
 		// @todo: make these UI-configurable?
-		if ( !($dimensions = $this->thumbnail_dimensions()) || isset($dimensions['_default']) ) {
+		// Note: see FAQ in the readme if you would like to change the YARPP thumbnail size.
+		
+		if ( $this->diagnostic_using_thumbnails() &&
+			( !($dimensions = $this->thumbnail_dimensions()) || isset($dimensions['_default']) ) ) {
 			$width = 120;
 			$height = 120;
 			$crop = true;
@@ -56,6 +57,9 @@ class YARPP {
 
 		if ( isset($_REQUEST['yarpp_debug']) )
 			$this->debug = true;
+		
+		if ( !get_option('yarpp_version') )
+			update_option( 'yarpp_activated', true );
 
 		// new in 3.4: only load UI if we're in the admin
 		if ( is_admin() ) {
@@ -124,6 +128,7 @@ class YARPP {
 			'auto_display_archive' => false, // new in 4
 			'auto_display_post_types' => array( 'post' ), // new in 4, replacing auto_display
 			'pools' => array(), // new in 4
+			'manually_using_thumbnails' => false, // new in 4.0.6
 		);
 	}
 	
@@ -197,14 +202,17 @@ class YARPP {
 		if ( $this->cache->is_enabled() === false )
 			return false;
 
-		return $this->diagnostic_fulltext_indices();
+		if ( !$this->diagnostic_fulltext_disabled() )
+			return $this->diagnostic_fulltext_indices();
+		
+		return true;
 	}
 		
 	// @since 3.5.2: function to enforce YARPP setup
-	// if new install, activate; else upgrade
+	// if not ready, activate; else upgrade
 	function enforce() {
-		if ( !get_option('yarpp_version') )
-			$this->activate();
+		if ( !$this->enabled() )
+			$this->activate(); // activate calls upgrade later, so it's covered.
 		else
 			$this->upgrade();
 		
@@ -215,9 +223,9 @@ class YARPP {
 	function activate() {
 		global $wpdb;
 	
-		if ( !$this->diagnostic_fulltext_indices() ) {
-			$wpdb->query("ALTER TABLE $wpdb->posts ADD FULLTEXT `yarpp_title` ( `post_title` )");
-			$wpdb->query("ALTER TABLE $wpdb->posts ADD FULLTEXT `yarpp_content` ( `post_content` )");
+		// if it's not known to be disabled, but the indexes aren't there:
+		if ( !$this->diagnostic_fulltext_disabled() && !$this->diagnostic_fulltext_indices() ) {
+			$this->enable_fulltext();
 		}
 		
 		if ( $this->cache->is_enabled() === false ) {
@@ -231,6 +239,7 @@ class YARPP {
 		
 		if ( !get_option('yarpp_version') ) {
 			// new install
+			
 			add_option( 'yarpp_version', YARPP_VERSION );
 			$this->version_info(true);
 		} else {
@@ -256,6 +265,54 @@ class YARPP {
 				return $table->Engine;
 		}
 		return 'UNKNOWN';
+	}
+	
+	function diagnostic_fulltext_disabled() {
+		return get_option( 'yarpp_fulltext_disabled', false );
+	}
+	
+	function enable_fulltext( $override_myisam = false ) {
+		global $wpdb;
+
+		// todo: check the myisam_override option instead.
+		if ( !$override_myisam ) {
+			$table_type = $this->diagnostic_myisam_posts();
+			if ( $table_type !== true ) {
+				$this->disable_fulltext();
+				return;
+			}
+		}
+
+		// temporarily ensure that errors are not displayed:
+		$previous_value = $wpdb->hide_errors();
+
+		$wpdb->query("ALTER TABLE $wpdb->posts ADD FULLTEXT `yarpp_title` ( `post_title` )");
+		if ( !empty($wpdb->last_error) )
+			$this->disable_fulltext();
+
+		$wpdb->query("ALTER TABLE $wpdb->posts ADD FULLTEXT `yarpp_content` ( `post_content` )");
+		if ( !empty($wpdb->last_error) )
+			$this->disable_fulltext();
+		
+		// restore previous setting
+		$wpdb->show_errors( $previous_value );
+	}
+	
+	function disable_fulltext() {
+		if ( get_option( 'yarpp_fulltext_disabled', false ) == true )
+			return;
+	
+		// rm title and body weights:
+		$weight = $this->get_option('weight');
+		unset($weight['title']);
+		unset($weight['body']);
+		$this->set_option(array('weight' => $weight));
+
+		// cut threshold by half:
+		$threshold = (float) $this->get_option('threshold');
+		$this->set_option(array('threshold' => round($threshold / 2) ));
+
+		update_option( 'yarpp_fulltext_disabled', true );
 	}
 	
 	function diagnostic_fulltext_indices() {
@@ -309,6 +366,17 @@ class YARPP {
 		'size' => '120x120',
 		'_default' => true
 	);
+
+	function diagnostic_using_thumbnails() {
+		if ( $this->get_option( 'manually_using_thumbnails' ) )
+			return true;
+		if ( $this->get_option( 'template' ) == 'thumbnails' )
+			return true;
+		if ( $this->get_option( 'rss_template' ) == 'thumbnails' && $this->get_option( 'rss_display' ) )
+			return true;
+		return false;
+	}
+
 	function thumbnail_dimensions() {
 		global $_wp_additional_image_sizes;
 		if ( !isset($_wp_additional_image_sizes['yarpp-thumbnail']) )
@@ -718,7 +786,7 @@ class YARPP {
 	}
 	
 	public function optin_data() {
-		global $wpdb, $yarpp;
+		global $wpdb;
 
 		$comments = wp_count_comments();
 		$users = count_users();
@@ -751,11 +819,13 @@ class YARPP {
 			),
 			'diagnostics' => array(
 				'myisam_posts' => $this->diagnostic_myisam_posts(),
+				'fulltext_disabled' => $this->diagnostic_fulltext_disabled(),
 				'fulltext_indices' => $this->diagnostic_fulltext_indices(),
 				'hidden_metaboxes' => $this->diagnostic_hidden_metaboxes(),
 				'post_thumbnails' => $this->diagnostic_post_thumbnails(),
 				'happy' => $this->diagnostic_happy(),
-				'generate_thumbnails' => $this->diagnostic_generate_thumbnails()
+				'using_thumbnails' => $this->diagnostic_using_thumbnails(),
+				'generate_thumbnails' => $this->diagnostic_generate_thumbnails(),
 			),
 			'stats' => array(
 				'counts' => array(),
@@ -780,20 +850,20 @@ class YARPP {
 		
 		$changed = array();
 		foreach ( $check_changed as $key ) {
-			if ( $yarpp->default_options[$key] != $settings[$key] )
+			if ( $this->default_options[$key] != $settings[$key] )
 				$changed[] = $key;
 		}
 		foreach ( array( 'before_related', 'rss_before_related' ) as $key ) {
 			if ( $settings[$key] != '<p>'.__('Related posts:','yarpp').'</p><ol>' &&
-				$settings[$key] != $yarpp->default_options[$key] )
+				$settings[$key] != $this->default_options[$key] )
 				$changed[] = $key;
 		}
 		$data['yarpp']['changed_settings'] = implode( '|', $changed );
 		
-		if ( method_exists( $yarpp->cache, 'cache_status' ) )
-			$data['yarpp']['cache_status'] = $yarpp->cache->cache_status();
-		if ( method_exists( $yarpp->cache, 'stats' ) ) {
-			$stats = $yarpp->cache->stats();
+		if ( method_exists( $this->cache, 'cache_status' ) )
+			$data['yarpp']['cache_status'] = $this->cache->cache_status();
+		if ( method_exists( $this->cache, 'stats' ) ) {
+			$stats = $this->cache->stats();
 			$flattened = array();
 			foreach ( $stats as $key => $value )
 				$flattened[] = "$key:$value";
@@ -1029,7 +1099,7 @@ class YARPP {
 		if ( YARPP_NO_RELATED == $cache_status )
 			return false;
 	
-		$this->active_cache->begin_yarpp_time($reference_ID); // get ready for YARPP TIME!
+		$this->active_cache->begin_yarpp_time($reference_ID, $args); // get ready for YARPP TIME!
 		$related_query = new WP_Query();
 		$related_query->query(array(
 			'p' => $reference_ID,
@@ -1181,6 +1251,10 @@ class YARPP {
 			) )
 			return $content;
 	
+		// if the content includes <!--noyarpp-->, don't display
+		if ( stristr($content, '<!--noyarpp-->') !== false )
+			return $content;
+	
 		if ( $this->get_option('cross_relate') )
 			$post_types = $this->get_post_types();
 		else
@@ -1196,6 +1270,10 @@ class YARPP {
 	
 	function the_content_feed($content) {
 		if ( !$this->get_option('rss_display') )
+			return $content;
+
+		// if the content includes <!--noyarpp-->, don't display
+		if ( stristr($content, '<!--noyarpp-->') !== false )
 			return $content;
 
 		if ( $this->get_option('cross_relate') )
@@ -1214,6 +1292,10 @@ class YARPP {
 	function the_excerpt_rss($content) {
 		if ( !$this->get_option('rss_excerpt_display') || 
 		     !$this->get_option('rss_display') )
+			return $content;
+
+		// if the content includes <!--noyarpp-->, don't display
+		if ( stristr($content, '<!--noyarpp-->') !== false )
 			return $content;
 
 		if ( $this->get_option('cross_relate') )
