@@ -6,21 +6,6 @@ class YARPP_Admin {
 	
 	function __construct(&$core) {
 		$this->core = &$core;
-<<<<<<< HEAD
-
-        /* YARPP Pro Default Options */
-        add_option(
-            'yarpp_pro',
-            array(
-                'active' => '0',
-                'aid'    => null,
-                'st'     => null,
-                'v'      => null,
-                'optin'  => false
-            )
-        );
-=======
->>>>>>> 4.2.2
 		
 		/* If action = flush and the nonce is correct, reset the cache */
 		if (isset($_GET['action']) && $_GET['action'] === 'flush' && check_ajax_referer('yarpp_cache_flush', false, false) !== false) {
@@ -57,15 +42,6 @@ class YARPP_Admin {
      */
 	function ajax_register() {
 		if (defined('DOING_AJAX') && DOING_AJAX) {
-<<<<<<< HEAD
-			add_action('wp_ajax_yarpp_display_exclude_terms',   array($this, 'ajax_display_exclude_terms'));
-			add_action('wp_ajax_yarpp_display_demo',            array($this, 'ajax_display_demo'));
-			add_action('wp_ajax_yarpp_display',                 array($this, 'ajax_display'));
-			add_action('wp_ajax_yarpp_optin_data',              array($this, 'ajax_optin_data'));
-            add_action('wp_ajax_yarpp_optin_enable',            array($this, 'ajax_optin_enable'));
-            add_action('wp_ajax_yarpp_optin_disable',           array($this, 'ajax_optin_disable'));
-			add_action('wp_ajax_yarpp_set_display_code',        array($this, 'ajax_set_display_code'));
-=======
                 add_action('wp_ajax_yarpp_display_exclude_terms',   array($this, 'ajax_display_exclude_terms'));
                 add_action('wp_ajax_yarpp_display_demo',            array($this, 'ajax_display_demo'));
                 add_action('wp_ajax_yarpp_display',                 array($this, 'ajax_display'));
@@ -73,7 +49,6 @@ class YARPP_Admin {
                 add_action('wp_ajax_yarpp_optin_enable',            array($this, 'ajax_optin_enable'));
                 add_action('wp_ajax_yarpp_optin_disable',           array($this, 'ajax_optin_disable'));
                 add_action('wp_ajax_yarpp_set_display_code',        array($this, 'ajax_set_display_code'));
->>>>>>> 4.2.2
 		}
 	}
 	
@@ -138,11 +113,7 @@ class YARPP_Admin {
 		/**
          * @since 3.3: Load options page sections as meta-boxes.
          */
-<<<<<<< HEAD
-		include_once(YARPP_DIR.'/classes/YARPP_Meta_Boxes.php');
-=======
 		include_once(YARPP_DIR.'/includes/yarpp_meta_boxes_hooks.php');
->>>>>>> 4.2.2
 
 		/**
          * @since 3.5.5 Check that add_help_tab method callable (WP >= 3.3).
@@ -288,20 +259,6 @@ class YARPP_Admin {
 	}
 
     function upgrade_notice() {
-<<<<<<< HEAD
-        $proAction   = ($this->core->yarppPro['active'])  ? 'disable' : 'enable';
-        $optinAction = ($this->core->get_option('optin')) ? 'disable' : 'enable';
-        $this->optin_notice('upgrade', $proAction, $optinAction);
-    }
-
-    public function install_notice(){
-        $proAction   = ($this->core->yarppPro['active'])  ? 'disable' : 'enable';
-        $optinAction = ($this->core->get_option('optin')) ? 'disable' : 'enable';
-        $this->optin_notice('install', $proAction, $optinAction);
-    }
-
-	function optin_notice($type=false, $proAction, $optinAction) {
-=======
         $optinAction = ($this->core->get_option('optin')) ? 'disable' : 'enable';
         $this->optin_notice('upgrade', $optinAction);
     }
@@ -312,7 +269,6 @@ class YARPP_Admin {
     }
 
 	public function optin_notice($type=false, $optinAction) {
->>>>>>> 4.2.2
 		$screen = get_current_screen();
 		if(is_null($screen) || $screen->id == 'settings_page_yarpp') return;
 
@@ -341,11 +297,7 @@ class YARPP_Admin {
 
             $out .=
                 '<p>'.
-<<<<<<< HEAD
-                    'You are currently using <em>YARPP Pro</em>!&nbsp;&nbsp;No need to enable sending usage data.<br/><br/>'.
-=======
                     'You currently have <strong>YARPP Basic</strong> and <strong>YARPP Pro</strong> enabled.<br/><br/>'.
->>>>>>> 4.2.2
                     '<a href="options-general.php?page=yarpp" class="button">Take me to the settings page</a>'.
                 '</p>';
 
@@ -404,11 +356,7 @@ class YARPP_Admin {
 		return $text;
 	}
 	
-<<<<<<< HEAD
-	function render_screen_settings( $output, $current_screen ) {
-=======
 	public function render_screen_settings ($output, $current_screen) {
->>>>>>> 4.2.2
 		if ( $current_screen->id != 'settings_page_yarpp' )
 			return $output;
 
@@ -445,11 +393,7 @@ class YARPP_Admin {
 		}
 	}
 	
-<<<<<<< HEAD
-	function settings_link($links, $file) {
-=======
 	public function settings_link($links, $file) {
->>>>>>> 4.2.2
 		$this_plugin = dirname(plugin_basename(dirname(__FILE__))).'/yarpp.php';
 		if($file == $this_plugin) {
 			$links[] = '<a href="options-general.php?page=yarpp">'.__('Settings').'</a>';
@@ -457,15 +401,9 @@ class YARPP_Admin {
 		return $links;
 	}
 	
-<<<<<<< HEAD
-	function options_page() {
-
-        if($this->core->yarppPro['active']){
-=======
 	public function options_page() {
         $mode = (isset($_GET['mode'])) ? htmlentities(strtolower($_GET['mode'])) : null;
         if ($mode !== 'basic' && ($mode === 'pro' || $this->core->yarppPro['active'])){
->>>>>>> 4.2.2
             include_once(YARPP_DIR.'/includes/yarpp_pro_options.php');
         } else {
             include_once(YARPP_DIR . '/includes/yarpp_options.php');
@@ -473,11 +411,7 @@ class YARPP_Admin {
 	}
 
 	// @since 3.4: don't actually compute results here, but use ajax instead		
-<<<<<<< HEAD
-	function metabox() {
-=======
 	public function metabox() {
->>>>>>> 4.2.2
 		?>
 		<style>
 		#yarpp_relatedposts h3 .postbox-title-action {
@@ -500,11 +434,7 @@ class YARPP_Admin {
 	}
 	
 	// @since 3.3: default metaboxes to show:
-<<<<<<< HEAD
-	function default_hidden_meta_boxes($hidden, $screen) {
-=======
 	public function default_hidden_meta_boxes($hidden, $screen) {
->>>>>>> 4.2.2
 		if ($screen->id === 'settings_page_yarpp') {
 			$hidden = $this->core->default_hidden_metaboxes;
         }
@@ -512,31 +442,6 @@ class YARPP_Admin {
 	}
 	
 	// @since 4: UI to copy templates
-<<<<<<< HEAD
-	function can_copy_templates() {
-		$theme_dir = get_stylesheet_directory();
-		// If we can't write to the theme, return false
-		if ( !is_dir($theme_dir) || !is_writable($theme_dir) )
-			return false;
-		
-		require_once(ABSPATH . 'wp-admin/includes/file.php');
-		WP_Filesystem( false, get_stylesheet_directory() );
-		global $wp_filesystem;			
-		// direct method is the only method that I've tested so far
-		return $wp_filesystem->method == 'direct';
-	}
-	
-	function copy_templates() {
-		$templates_dir = trailingslashit(trailingslashit(YARPP_DIR) . 'yarpp-templates');
-		
-		require_once(ABSPATH . 'wp-admin/includes/file.php');
-		WP_Filesystem( false, get_stylesheet_directory() );
-		global $wp_filesystem;
-		if ( $wp_filesystem->method != 'direct' )
-			return false;
-		
-		return copy_dir( $templates_dir, get_stylesheet_directory(), array('.svn') );
-=======
 	public function can_copy_templates() {
 		$theme_dir = get_stylesheet_directory();
 		// If we can't write to the theme, return false
@@ -558,18 +463,13 @@ class YARPP_Admin {
 		if ( $wp_filesystem->method !== 'direct') return false;
 		
 		return copy_dir($templates_dir, get_stylesheet_directory(), array('.svn'));
->>>>>>> 4.2.2
 	}
 	
 	/*
 	 * AJAX SERVICES
 	 */
 
-<<<<<<< HEAD
-	function ajax_display_exclude_terms() {
-=======
 	public function ajax_display_exclude_terms() {
->>>>>>> 4.2.2
 		check_ajax_referer('yarpp_display_exclude_terms');
 		
 		if (!isset($_REQUEST['taxonomy'])) return;
@@ -581,11 +481,7 @@ class YARPP_Admin {
 		
 		$exclude_tt_ids = wp_parse_id_list($this->core->get_option('exclude'));
 		$exclude_term_ids = $this->get_term_ids_from_tt_ids( $taxonomy, $exclude_tt_ids );
-<<<<<<< HEAD
-//		if ('category' == $taxonomy) $exclude .= ','.get_option('default_category');
-=======
 //		if ('category' === $taxonomy) $exclude .= ','.get_option('default_category');
->>>>>>> 4.2.2
 
 		$terms = get_terms($taxonomy, array(
 			'exclude' => $exclude_term_ids,
@@ -606,11 +502,7 @@ class YARPP_Admin {
 		exit;
 	}
 	
-<<<<<<< HEAD
-	function get_term_ids_from_tt_ids( $taxonomy, $tt_ids ) {
-=======
 	public function get_term_ids_from_tt_ids( $taxonomy, $tt_ids ) {
->>>>>>> 4.2.2
 		global $wpdb;
 		$tt_ids = wp_parse_id_list($tt_ids);
 		if ( empty($tt_ids) )
@@ -618,11 +510,7 @@ class YARPP_Admin {
 		return $wpdb->get_col("select term_id from $wpdb->term_taxonomy where taxonomy = '{$taxonomy}' and term_taxonomy_id in (" . join(',', $tt_ids) . ")");
 	}
 	
-<<<<<<< HEAD
-	function ajax_display() {
-=======
 	public function ajax_display() {
->>>>>>> 4.2.2
 		check_ajax_referer('yarpp_display');
 
 		if (!isset($_REQUEST['ID'])) return;
@@ -643,11 +531,7 @@ class YARPP_Admin {
 		die();
 	}
 
-<<<<<<< HEAD
-	function ajax_display_demo() {
-=======
 	public function ajax_display_demo() {
->>>>>>> 4.2.2
 		check_ajax_referer('yarpp_display_demo');
 
 		header("HTTP/1.1 200");
@@ -666,11 +550,7 @@ class YARPP_Admin {
     /**
      * Display optin data in a human readable format on the help tab.
      */
-<<<<<<< HEAD
-	function ajax_optin_data() {
-=======
 	public function ajax_optin_data() {
->>>>>>> 4.2.2
 		check_ajax_referer('yarpp_optin_data');
 
 		header("HTTP/1.1 200");
@@ -706,11 +586,7 @@ class YARPP_Admin {
 		die();
 	}
 
-<<<<<<< HEAD
-	function ajax_set_display_code() {
-=======
 	public function ajax_set_display_code() {
->>>>>>> 4.2.2
 		check_ajax_referer( 'yarpp_set_display_code' );
 
 		header("HTTP/1.1 200");

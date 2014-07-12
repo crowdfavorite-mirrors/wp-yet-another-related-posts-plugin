@@ -11,22 +11,6 @@ class YARPP {
      * settings (yarpp_options.php) and other tasks.
      */
     public $default_options             = array();
-<<<<<<< HEAD
-    public $default_hidden_metaboxes    = array();
-	public $debug                       = false;
-    public $yarppPro                    = null;
-    public $cache_bypass;
-	public $cache;
-    public $admin;
-
-	private $active_cache;
-	private $storage_class;
-
-	public function __construct() {
-
-        $this->yarppPro = get_option('yarpp_pro');
-		$this->load_default_options();
-=======
     public $pro_default_options         = array();
     public $default_hidden_metaboxes    = array();
     public $debug                       = false;
@@ -48,7 +32,6 @@ class YARPP {
 	public function __construct() {
 		$this->load_default_options();
         $this->yarppPro = $this->get_pro_options();
->>>>>>> 4.2.2
 
 		/* Loads the plugin's translated strings. */
 		load_plugin_textdomain('yarpp', false, plugin_basename(YARPP_DIR).'/lang');
@@ -105,9 +88,6 @@ class YARPP {
 	/*
 	 * OPTIONS
 	 */
-<<<<<<< HEAD
-	
-=======
     private function load_pro_default_options() {
         return
             array(
@@ -121,7 +101,6 @@ class YARPP {
             );
     }
 
->>>>>>> 4.2.2
 	private function load_default_options() {
 		$this->default_options = array(
 			'threshold' => 4,
@@ -222,11 +201,7 @@ class YARPP {
 		// ensure defaults if not set:
 		$options = array_merge($this->default_options, $options);
 
-<<<<<<< HEAD
-		if (is_null( $option )) return $options;
-=======
 		if (is_null($option)) return $options;
->>>>>>> 4.2.2
 	
 		$optionpath     = array();
 		$parsed_option  = array();
@@ -241,8 +216,6 @@ class YARPP {
 
 		return $current;
 	}
-<<<<<<< HEAD
-=======
 
     private function get_pro_options(){
         $current  = get_option('yarpp_pro');
@@ -258,7 +231,6 @@ class YARPP {
 
         return $out;
     }
->>>>>>> 4.2.2
 	
 	private function array_flatten($array, $given = array()) {
 		foreach ($array as $key => $val) {
@@ -277,19 +249,11 @@ class YARPP {
      * @since 3.5.2 Function to enforce YARPP setup if not ready, activate; else upgrade.
      */
     public function enforce() {
-<<<<<<< HEAD
-
-=======
->>>>>>> 4.2.2
         if (!$this->enabled()) {
             $this->activate(); // activate calls upgrade later, so it's covered.
         } else {
             $this->upgrade();
         }
-<<<<<<< HEAD
-
-=======
->>>>>>> 4.2.2
         if ($this->get_option('optin')) $this->optin_ping();
     }
 
@@ -300,10 +264,6 @@ class YARPP {
 	}
 	
 	public function activate() {
-<<<<<<< HEAD
-	
-=======
->>>>>>> 4.2.2
 		/*
 		 * If it's not known to be disabled, but the indexes aren't there.
 		 */
@@ -410,11 +370,7 @@ class YARPP {
 		$wpdb->get_results("SHOW INDEX FROM {$wpdb->posts} WHERE Key_name = 'yarpp_title' OR Key_name = 'yarpp_content'");
 		return ($wpdb->num_rows >= 2);
 	}
-<<<<<<< HEAD
-	
-=======
 
->>>>>>> 4.2.2
 	public function diagnostic_hidden_metaboxes() {
 		global $wpdb;
 		$raw = $wpdb->get_var(
@@ -422,15 +378,9 @@ class YARPP {
             "WHERE meta_key = 'metaboxhidden_settings_page_yarpp' ".
             "ORDER BY length(meta_value) ASC LIMIT 1"
         );
-<<<<<<< HEAD
-		
-		if (!$raw) return $this->default_hidden_metaboxes;
-		
-=======
 
 		if (!$raw) return $this->default_hidden_metaboxes;
 
->>>>>>> 4.2.2
 		$list = maybe_unserialize($raw);
 		if (!is_array($list)) return $this->default_hidden_metaboxes;
 
@@ -459,17 +409,6 @@ class YARPP {
 	public function diagnostic_generate_thumbnails() {
 		return (defined('YARPP_GENERATE_THUMBNAILS') && YARPP_GENERATE_THUMBNAILS);
 	}
-<<<<<<< HEAD
-	
-	private $default_dimensions = array(
-		'width'     => 120,
-		'height'    => 120,
-		'crop'      => false,
-		'size'      => '120x120',
-		'_default'  => true
-	);
-=======
->>>>>>> 4.2.2
 
 	public function diagnostic_using_thumbnails() {
 		if ($this->get_option('manually_using_thumbnails')) return true;
@@ -514,11 +453,7 @@ class YARPP {
             )
         );
 
-<<<<<<< HEAD
-        $url = plugins_url('includes/styles-thumbnails.css.php?'.$queryStr, dirname(__FILE__));
-=======
         $url = plugins_url('includes/styles_thumbnails.css.php?'.$queryStr, dirname(__FILE__));
->>>>>>> 4.2.2
 		wp_enqueue_style("yarpp-thumbnails-".$dimensions['size'], $url, array(), YARPP_VERSION, 'all');
 	}
 
@@ -584,13 +519,8 @@ class YARPP {
 	
 	public function upgrade() {
 		$last_version = get_option('yarpp_version');
-<<<<<<< HEAD
-		if (version_compare(YARPP_VERSION, $last_version) === 0) return;
-	
-=======
 
 		if (version_compare(YARPP_VERSION, $last_version) === 0) return;
->>>>>>> 4.2.2
 		if ($last_version && version_compare('3.4b2',   $last_version) > 0) $this->upgrade_3_4b2();
 		if ($last_version && version_compare('3.4b5',   $last_version) > 0) $this->upgrade_3_4b5();
 		if ($last_version && version_compare('3.4b8',   $last_version) > 0) $this->upgrade_3_4b8();
@@ -711,11 +641,7 @@ class YARPP {
 		update_option('yarpp', $options);
 	}
 	
-<<<<<<< HEAD
-	function upgrade_3_4b8() {
-=======
 	public function upgrade_3_4b8() {
->>>>>>> 4.2.2
 		$options = $this->get_option();
 		$options['weight'] = array(
 			'title' => (int) @$options['title'],
@@ -816,23 +742,11 @@ class YARPP {
 	
 	public function upgrade_3_5_2b2() {
 		// fixing the effects of a previous bug affecting non-MyISAM users
-<<<<<<< HEAD
-		if (is_null( $this->get_option('weight'))
-            || !is_array( $this->get_option('weight'))
-        ) {
-			$weight = $this->default_options['weight'];
-
-			// if we're still not using MyISAM
-			if (!$this->get_option('myisam_override')
-                && $this->diagnostic_myisam_posts() !== true
-            ) {
-=======
 		if (is_null($this->get_option('weight')) || !is_array( $this->get_option('weight'))) {
 			$weight = $this->default_options['weight'];
 
 			// if we're still not using MyISAM
 			if (!$this->get_option('myisam_override') && $this->diagnostic_myisam_posts() !== true) {
->>>>>>> 4.2.2
 				unset($weight['title']);
 				unset($weight['body']);
 			}
@@ -855,23 +769,16 @@ class YARPP {
 	public function upgrade_4_0_1() {
 		delete_transient('yarpp_version_info');
 	}
-<<<<<<< HEAD
-=======
 
     public function upgrade_4_2(){
         $this->load_pro_default_options();
         $new = array_merge($this->pro_default_options,$this->yarppPro);
         update_option('yarpp_pro', $new);
     }
->>>>>>> 4.2.2
 	
 	/*
 	 * UTILITIES
 	 */
-<<<<<<< HEAD
-	
-=======
->>>>>>> 4.2.2
 	private $current_post;
 	private $current_query;
 	private $current_pagenow;
@@ -1071,8 +978,6 @@ class YARPP {
 	/*
 	 * CORE LOOKUP + DISPLAY FUNCTIONS
 	 */
-<<<<<<< HEAD
-=======
     protected function display_basic(){
         /* if it's not an auto-display post type, return */
         if (!in_array(get_post_type(), $this->get_option('auto_display_post_types'))) return null;
@@ -1120,7 +1025,6 @@ class YARPP {
 
         return $output;
     }
->>>>>>> 4.2.2
 
     /**
      * Display related posts
@@ -1133,149 +1037,6 @@ class YARPP {
      * @return string
 	 */
 	public function display_related($reference_ID = null, $args = array(), $echo = true) {
-<<<<<<< HEAD
-        $output = null;
-        /*
-         * YARPP Pro Script Tag
-         */
-        if((isset($this->yarppPro['active']) && $this->yarppPro['active']) && $args['domain'] === 'website'){
-
-            if(
-                (isset($this->yarppPro['aid']) && isset($this->yarppPro['v']))
-                && ($this->yarppPro['aid'] && $this->yarppPro['v'])
-            ){
-                $ru = 'http://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
-                $output =
-                "\n".
-                '<script>'.
-                'var aid='.$this->yarppPro['aid'].',v="'.$this->yarppPro['v'].'",credomain="adkengage.com",ru="'.$ru.'";'.
-                "document.write('<sc'+'ript type=\"text/javascript\" src=\"http://'+ credomain +'/Scripts/CREReqScript.js\"></sc'+'ript>');".
-                '</script>'.
-                "\n";
-            }
-        } else {
-
-            /* If we're already in a YARPP loop, stop now. */
-            if ($this->cache->is_yarpp_time() || $this->cache_bypass->is_yarpp_time()) return false;
-
-            $this->enforce();
-
-            if (is_numeric($reference_ID)) {
-                $reference_ID = (int) $reference_ID;
-            } else {
-                $reference_ID = get_the_ID();
-            }
-
-            /**
-             * @since 3.5.3 don't compute on revisions.
-             */
-            if ($the_post = wp_is_post_revision($reference_ID)) $reference_ID = $the_post;
-
-            $this->setup_active_cache($args);
-
-            $options = array(
-                'domain',
-                'limit',
-                'template',
-                'order',
-                'promote_yarpp',
-                'optin'
-            );
-
-            extract($this->parse_args($args, $options));
-
-            $cache_status = $this->active_cache->enforce($reference_ID);
-            if ($cache_status === YARPP_DONT_RUN) return;
-            if ($cache_status !== YARPP_NO_RELATED) $this->active_cache->begin_yarpp_time($reference_ID, $args);
-
-            $this->save_post_context();
-
-            global $wp_query; $wp_query = new WP_Query();
-
-            if ($cache_status !== YARPP_NO_RELATED) {
-                $orders = explode(' ', $order);
-                $wp_query->query(
-                    array(
-                        'p'         => $reference_ID,
-                        'orderby'   => $orders[0],
-                        'order'     => $orders[1],
-                        'showposts' => $limit,
-                        'post_type' => (isset($args['post_type']) ? $args['post_type'] : $this->get_post_types())
-                    )
-                );
-            }
-
-            $this->prep_query($this->current_query->is_feed);
-
-            $wp_query->posts = apply_filters('yarpp_results', $wp_query->posts, array(
-                'function'      => 'display_related',
-                'args'          => $args,
-                'related_ID'    => $reference_ID)
-            );
-
-            $related_query = $wp_query; // backwards compatibility
-            $related_count = $related_query->post_count;
-
-            $output = "<div class='";
-            if ($domain === 'website') {
-                $output .= "yarpp-related";
-            } else {
-                $output .= "yarpp-related-{$domain}";
-            }
-
-            if ($related_count < 1) {
-                $output .= " yarpp-related-none";
-            }
-
-            $output .= "'>\n";
-
-            if ($domain === 'metabox') {
-                include(YARPP_DIR.'/includes/template-metabox.php');
-            } elseif ((bool) $template && $template === 'thumbnails') {
-                include(YARPP_DIR.'/includes/template_thumbnails.php');
-            } elseif ((bool) $template && file_exists(STYLESHEETPATH.'/'.$template)) {
-                global $post;
-                ob_start();
-                include(STYLESHEETPATH.'/'.$template);
-                $output .= ob_get_contents();
-                ob_end_clean();
-            } elseif ($domain === 'widget') {
-                include(YARPP_DIR.'/includes/template-widget.php');
-            } else {
-                include(YARPP_DIR.'/includes/template_builtin.php');
-            }
-            $output = trim($output)."\n";
-
-            if ($cache_status === YARPP_NO_RELATED) {
-                // Uh, do nothing. Stay very still.
-            } else {
-                $this->active_cache->end_yarpp_time();
-            }
-
-            unset($related_query);
-            $this->restore_post_context();
-
-            if ($related_count > 0 && $promote_yarpp && $domain != 'metabox') {
-                $output .=
-                    "<p>".
-                        sprintf(
-                            __("Related posts brought to you by <a href='%s'>Yet Another Related Posts Plugin</a>.",'yarpp'),
-                            'http://www.yarpp.com'
-                        ).
-                    "</p>\n";
-            }
-
-            if($optin){
-                $output .= '<img src="http://yarpp.org/pixels/'.md5(get_bloginfo('url')).'" alt="YARPP"/>'."\n";
-            }
-            $output .= "</div>\n";
-        }
-
-        if ($echo) echo $output;
-		return $output;
-
-	}/*end display_related*/
-=======
         
         /* If we're already in a YARPP loop, stop now. */
         if ($this->cache->is_yarpp_time() || $this->cache_bypass->is_yarpp_time()) return false;
@@ -1393,7 +1154,6 @@ class YARPP {
         if ($echo) echo $output;
 		return $output;
 	}
->>>>>>> 4.2.2
 	
 	/* 
 	 * @param (int) $reference_ID
@@ -1402,10 +1162,6 @@ class YARPP {
 	public function get_related($reference_ID = null, $args = array()) {
 		/* If we're already in a YARPP loop, stop now. */
 		if ($this->cache->is_yarpp_time() || $this->cache_bypass->is_yarpp_time()) return false;
-<<<<<<< HEAD
-
-=======
->>>>>>> 4.2.2
 		$this->enforce();
 
 		if (is_numeric($reference_ID)) {
@@ -1667,40 +1423,6 @@ class YARPP {
 		/* this filter doesn't handle feeds */
 		if (is_feed()) return $content;
 
-<<<<<<< HEAD
-		$auto_display_post_types = $this->get_option('auto_display_post_types');
-
-		/* if it's not an auto-display post type, return */
-		if (!in_array(get_post_type(), $auto_display_post_types)) return $content;
-
-		if (!is_singular()
-            && !($this->get_option('auto_display_archive') && (is_archive() || is_home()))
-        ) {
-			return $content;
-        }
-	
-		/* If the content includes <!--noyarpp-->, don't display */
-		if (stristr($content, '<!--noyarpp-->') !== false) return $content;
-	
-		if ($this->get_option('cross_relate')) {
-			$post_types = $this->get_post_types();
-        } else {
-			$post_types = array(get_post_type());
-        }
-
-		$post_types = apply_filters('yarpp_map_post_types', $post_types, 'website');
-	
-		return $content.$this->display_related(
-            null,
-            array(
-			    'post_type' => $post_types,
-			    'domain'    => 'website'
-		    ),
-            false
-        );
-	}
-	
-=======
 		/* If the content includes <!--noyarpp-->, don't display */
 		if (!stristr($content, '<!--noyarpp-->')) {
             $content .= $this->display_basic();
@@ -1710,7 +1432,6 @@ class YARPP {
 		return $content;
 	}
 
->>>>>>> 4.2.2
 	public function the_content_feed($content) {
 		if (!$this->get_option('rss_display')) return $content;
 

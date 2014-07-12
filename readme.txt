@@ -5,13 +5,8 @@ Author URI: http://www.yarpp.com/
 Plugin URI: http://www.yarpp.com/
 Tags: feeds, pages, posts, related, rss, yarpp, ads, multisite, multilingual, thumbnails, related posts, related content
 Requires at least: 3.3
-<<<<<<< HEAD
-Tested up to: 3.8
-Stable tag: 4.1.2
-=======
 Tested up to: 3.9.1
 Stable tag: 4.2.2
->>>>>>> 4.2.2
 License: GPLv2 or later
 
 Display a list of related posts on your site based on a powerful unique algorithm. Earn money by including sponsored content!
@@ -21,26 +16,6 @@ Display a list of related posts on your site based on a powerful unique algorith
 Yet Another Related Posts Plugin (YARPP) displays pages, posts, and custom post types related to the current entry, introducing your readers to other relevant content on your site.
 [(See current offers and promotions for YARPP Pro users.)](http://www.yarpp.com/offers)
 
-<<<<<<< HEAD
-**Enable YARPP Pro for Powerful Enhancements**
------------------------------------------
-* **Customize thumbnail layout** through the user interface.
-* **Pull related content from multiple sites**.
-* **Make money** by displaying relevant sponsored content.
-* **Easily promote your product or service** on thousands of blogs and websites.
-* **Get detailed reporting** ab out your related content list.
-
-[Learn more about the new YARPP Pro enhancements!](http://www.yarpp.com)
-
-**Keep YARPP Basic for Standard Features**
--------------------------------------------
-* **Thumbnail or list view** of related content.
-* **Related posts, pages, and custom post types.**
-* **Templating**: The YARPP templating system gives you advanced control of how your results are displayed.
-* **An advanced and versatile algorithm**: Using a customizable algorithm considering post titles, content, tags, categories, and custom taxonomies, YARPP finds related content from across your site. [Learn More.](http://wordpress.tv/2011/01/29/michael-"mitcho"-erlewine-the-yet-another-related-posts-plugin-algorithm-explained/)
-* **Related posts in feeds**: Display related posts in RSS feeds with custom display options.
-
-=======
 **NEW!** Now you can mix and match **YARPP Basic** and **YARPP Pro** to get the best of both features, beneath articles or in the sidebar! Use the combination that works best for you.
 
 **Enable YARPP Pro for Powerful Enhancements**
@@ -61,7 +36,6 @@ Yet Another Related Posts Plugin (YARPP) displays pages, posts, and custom post 
 * **An advanced and versatile algorithm**: Using a customizable algorithm considering post titles, content, tags, categories, and custom taxonomies, YARPP finds related content from across your site. [Learn More.](http://wordpress.tv/2011/01/29/michael-%E2%80%9Cmitcho%E2%80%9D-erlewine-the-yet-another-related-posts-plugin-algorithm-explained/)  
 * **Related posts in feeds**: Display related posts in RSS feeds with custom display options.
 
->>>>>>> 4.2.2
 This plugin requires PHP 5, MySQL 4.1, and WordPress 3.3 or greater. See [the FAQ](http://wordpress.org/plugins/yet-another-related-posts-plugin/faq/) for answers to common questions.
 
 == Installation ==
@@ -78,13 +52,9 @@ Make sure the "display related posts in feeds" option is turned on if you would 
 
 = Widget =
 
-<<<<<<< HEAD
-Related posts can also be displayed as a widget. Go to the Appearance > Widgets options page and add the Related Posts widget. The widget will only be displayed on single entry (permalink) pages. The widget can be used even if the "auto display" option is turned off.
-=======
 Related posts can also be displayed as a widget. Go to the Appearance > Widgets options page and add the "Related Posts (YARPP)" widget. Choose to display content from YARPP Basic or YARPP Pro. The widget will only be displayed on single entry (permalink) pages.
 
 The YARPP Basic widget can be used even if the "auto display" option is turned off. The YARPP Pro sidebar widget can be used even if you choose YARPP Basic to display related content at the bottom of your posts.
->>>>>>> 4.2.2
 
 = Custom display through templates =
 
@@ -328,8 +298,6 @@ YARPP is currently localized in the following languages:
 
 == Changelog ==
 
-<<<<<<< HEAD
-=======
 = 4.2.2 =
 * Tested on WordPress 3.9.1.
 * Bugfix: Duplicate related post links removed.
@@ -347,7 +315,6 @@ YARPP is currently localized in the following languages:
 * Updated MyISAM check notice message to explain its impact on "Pages."
 * Added descriptive text to explain new enhancements.
 
->>>>>>> 4.2.2
 = 4.1.2 =
 * Tested on Wordpress 3.8.
 * Added field boxes with API Key information to Domain page.
