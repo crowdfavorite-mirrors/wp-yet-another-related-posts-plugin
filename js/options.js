@@ -4,7 +4,8 @@ jQuery(function($) {
 
 	function template() {
 		var metabox = $(this).closest('#yarpp_display_web, #yarpp_display_rss');
-		if (!metabox.length) return;
+		if ( !metabox.length )
+			return;
 			
 		value = metabox.find('.use_template').val();
 		
@@ -16,9 +17,8 @@ jQuery(function($) {
 	
 	function excerpt() {
 		var metabox = $(this).closest('#yarpp_display_web, #yarpp_display_rss');
-		metabox.find('.excerpted').toggle(
-            !!(metabox.find('.use_template').val() === 'builtin' && metabox.find('.show_excerpt input').attr('checked'))
-        );
+		metabox.find('.excerpted').toggle( !!(metabox.find('.use_template').val() == 'builtin' &&
+			metabox.find('.show_excerpt input').attr('checked')) );
 	}
 	$('.show_excerpt, .use_template, #yarpp-rss_display').click(excerpt);
 	
