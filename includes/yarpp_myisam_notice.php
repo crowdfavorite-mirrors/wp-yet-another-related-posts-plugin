@@ -38,7 +38,12 @@ if (!(bool) yarpp_get_option('myisam_override') && (bool) $yarpp->diagnostic_ful
     echo(
         "<div class='updated' style='padding:15px'>".
             '<p>'.
+<<<<<<< HEAD
                 '<strong>"Consider Titles"</strong> and <strong>"Consider Bodies"</strong> are currently disabled.'.
+=======
+                '<strong>"Consider Titles"</strong> and <strong>"Consider Bodies"</strong> are currently disabled. '.
+                'As a result, "Pages" may not display in the "Related Posts" sections.'.
+>>>>>>> 4.2.2
                 '&nbsp;&nbsp;<a href="#" id="yarpp_fulltext_expand">Show Details [+]</a>'.
             '</p>'.
             '<div id="yarpp_fulltext_details" class="hidden">'.
